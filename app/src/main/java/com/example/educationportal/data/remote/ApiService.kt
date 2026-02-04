@@ -1,6 +1,8 @@
 package com.example.educationportal.data.remote
 
 import com.example.educationportal.data.model.AuthResponse
+import com.example.educationportal.data.model.ChatHistoryResponse
+import com.example.educationportal.data.model.ChatMessage
 import com.example.educationportal.data.model.Classroom
 import com.example.educationportal.data.model.ClassroomDetail
 import com.example.educationportal.data.model.ClassroomListResponse
@@ -24,6 +26,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
+import retrofit2.http.Query
 import retrofit2.http.Streaming
 
 interface ApiService {
@@ -114,5 +117,23 @@ interface ApiService {
         @Path("classroomId") classroomId: Int,
         @Path("materialId") materialId: Int
     ): Response<ResponseBody>
+
+    // ==================== Chat Endpoints ====================
+
+    @GET("api/classrooms/{classroomId}/messages")
+    suspend fun getChatHistory(
+        @Header("Authorization") token: String,
+        @Path("classroomId") classroomId: Int,
+        @Query("page") page: Int = 1,
+        @Query("page_size") pageSize: Int = 50
+    ): Response<ChatHistoryResponse>
+
+    @GET("api/classrooms/{classroomId}/messages/recent")
+    suspend fun getRecentMessages(
+        @Header("Authorization") token: String,
+        @Path("classroomId") classroomId: Int,
+        @Query("limit") limit: Int = 20,
+        @Query("before_id") beforeId: Int? = null
+    ): Response<List<ChatMessage>>
 
 }

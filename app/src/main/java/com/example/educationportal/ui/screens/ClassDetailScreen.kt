@@ -52,7 +52,8 @@ fun ClassDetailScreen(
     classroomId: Int,
     classroomViewModel: ClassroomViewModel,
     homeViewModel: HomeViewModel,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToChat: (Int, String) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
     val homeState by homeViewModel.uiState.collectAsState()
@@ -200,6 +201,22 @@ fun ClassDetailScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                },
+                actions = {
+                    // Chat button
+                    IconButton(
+                        onClick = {
+                            detailState.classroom?.let { classroom ->
+                                onNavigateToChat(classroom.id, classroom.name)
+                            }
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.Chat,
+                            contentDescription = "Chat",
                             tint = Color.White
                         )
                     }

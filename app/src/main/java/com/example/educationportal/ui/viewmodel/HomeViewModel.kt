@@ -15,6 +15,7 @@ data class HomeUiState(
     val userName: String = "",
     val userEmail: String = "",
     val userRole: UserRole? = null,
+    val currentUserId: Int? = null,
     val isLoading: Boolean = false,
     val isLoggedOut: Boolean = false,
     val errorMessage: String? = null
@@ -81,6 +82,7 @@ class HomeViewModel(
                                 userName = user.fullName,
                                 userEmail = user.email,
                                 userRole = user.role,
+                                currentUserId = user.id,
                                 isLoading = false
                             )
                         }

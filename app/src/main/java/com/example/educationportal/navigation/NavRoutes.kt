@@ -9,4 +9,8 @@ sealed class NavRoutes(val route: String) {
     data object ClassDetail : NavRoutes("class_detail/{classroomId}") {
         fun createRoute(classroomId: Int) = "class_detail/$classroomId"
     }
+    data object ClassChat : NavRoutes("class_chat/{classroomId}/{classroomName}") {
+        fun createRoute(classroomId: Int, classroomName: String) = 
+            "class_chat/$classroomId/${java.net.URLEncoder.encode(classroomName, "UTF-8")}"
+    }
 }

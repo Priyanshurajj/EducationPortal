@@ -10,18 +10,21 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.educationportal.data.model.UserRole
+import com.example.educationportal.ui.screens.ClassChatScreen
 import com.example.educationportal.ui.screens.ClassDetailScreen
 import com.example.educationportal.ui.screens.LoginScreen
 import com.example.educationportal.ui.screens.RegisterScreen
 import com.example.educationportal.ui.screens.SplashScreen
 import com.example.educationportal.ui.screens.StudentHomeScreen
 import com.example.educationportal.ui.screens.TeacherHomeScreen
+import com.example.educationportal.ui.viewmodel.ChatViewModel
 import com.example.educationportal.ui.viewmodel.ClassroomViewModel
 import com.example.educationportal.ui.viewmodel.HomeViewModel
 import com.example.educationportal.ui.viewmodel.LoginViewModel
 import com.example.educationportal.ui.viewmodel.RegisterViewModel
 import com.example.educationportal.ui.viewmodel.SplashViewModel
 import com.example.educationportal.ui.viewmodel.ViewModelFactory
+import java.net.URLDecoder
 
 @Composable
 fun NavGraph(
@@ -141,6 +144,35 @@ fun NavGraph(
                 classroomId = classroomId,
                 classroomViewModel = classroomViewModel,
                 homeViewModel = homeViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToChat = { id, name ->
+                    navController.navigate(NavRoutes.ClassChat.createRoute(id, name))
+                }
+            )
+        }
+
+        composable(
+            route = NavRoutes.ClassChat.route,
+            arguments = listOf(
+                navArgument("classroomId") { type = NavType.IntType },
+                navArgument("classroomName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val classroomId = backStackEntry.arguments?.getInt("classroomId") ?: return@composable
+            val classroomName = backStackEntry.arguments?.getString("classroomName")?.let {
+                URLDecoder.decode(it, "UTF-8")
+            } ?: "Chat"
+            val homeViewModel: HomeViewModel = viewModel(factory = viewModelFactory)
+            val chatViewModel: ChatViewModel = viewModel(factory = viewModelFactory)
+            val homeState = homeViewModel.uiState
+            
+            ClassChatScreen(
+                classroomId = classroomId,
+                classroomName = classroomName,
+                currentUserId = homeState.value.currentUserId ?: 0,
+                chatViewModel = chatViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 }
