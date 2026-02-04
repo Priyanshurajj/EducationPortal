@@ -2,7 +2,6 @@ package com.example.educationportal.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.educationportal.data.model.UserRole
 import com.example.educationportal.data.repository.AuthRepository
 import com.example.educationportal.util.Resource
 import com.example.educationportal.util.ValidationUtils
@@ -19,8 +18,6 @@ data class LoginUiState(
     val passwordError: String? = null,
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
-    val isNavigated: Boolean = false,
-    val userRole: UserRole? = null,
     val errorMessage: String? = null,
     val isPasswordVisible: Boolean = false
 )
@@ -31,7 +28,6 @@ sealed class LoginEvent {
     data object TogglePasswordVisibility : LoginEvent()
     data object Login : LoginEvent()
     data object ClearError : LoginEvent()
-    data object NavigationHandled : LoginEvent()
 }
 
 class LoginViewModel(
@@ -58,19 +54,11 @@ class LoginViewModel(
             is LoginEvent.ClearError -> {
                 _uiState.update { it.copy(errorMessage = null) }
             }
-            is LoginEvent.NavigationHandled -> {
-                _uiState.update { it.copy(isNavigated = true) }
-            }
         }
     }
 
     private fun login() {
         val currentState = _uiState.value
-
-        // Prevent multiple submissions
-        if (currentState.isLoading || currentState.isSuccess) {
-            return
-        }
 
         // Validate email
         val emailValidation = ValidationUtils.validateEmail(currentState.email)
@@ -79,9 +67,10 @@ class LoginViewModel(
             return
         }
 
-        // Basic password check (not full validation for login)
-        if (currentState.password.isBlank()) {
-            _uiState.update { it.copy(passwordError = "Password cannot be empty") }
+        // Validate password
+        val passwordValidation = ValidationUtils.validatePassword(currentState.password)
+        if (!passwordValidation.isValid) {
+            _uiState.update { it.copy(passwordError = passwordValidation.errorMessage) }
             return
         }
 
@@ -90,15 +79,7 @@ class LoginViewModel(
 
             when (val result = authRepository.login(currentState.email, currentState.password)) {
                 is Resource.Success -> {
-                    // Get user role after successful login
-                    val userRole = authRepository.getUserRole()
-                    _uiState.update { 
-                        it.copy(
-                            isLoading = false, 
-                            isSuccess = true,
-                            userRole = userRole
-                        ) 
-                    }
+                    _uiState.update { it.copy(isLoading = false, isSuccess = true) }
                 }
                 is Resource.Error -> {
                     _uiState.update {

@@ -17,17 +17,14 @@ object ValidationUtils {
         if (password.isBlank()) {
             return ValidationResult(false, "Password cannot be empty")
         }
-        if (password.length < 8) {
-            return ValidationResult(false, "Password must be at least 8 characters")
-        }
-        if (!password.any { it.isUpperCase() }) {
-            return ValidationResult(false, "Password must contain at least one uppercase letter")
-        }
-        if (!password.any { it.isLowerCase() }) {
-            return ValidationResult(false, "Password must contain at least one lowercase letter")
+        if (password.length < 6) {
+            return ValidationResult(false, "Password must be at least 6 characters")
         }
         if (!password.any { it.isDigit() }) {
             return ValidationResult(false, "Password must contain at least one digit")
+        }
+        if (!password.any { it.isLetter() }) {
+            return ValidationResult(false, "Password must contain at least one letter")
         }
         return ValidationResult(true)
     }

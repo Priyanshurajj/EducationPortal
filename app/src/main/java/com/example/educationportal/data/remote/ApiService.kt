@@ -13,6 +13,7 @@ import com.example.educationportal.data.model.RegisterRequest
 import com.example.educationportal.data.model.User
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -23,6 +24,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
+import retrofit2.http.Streaming
 
 interface ApiService {
 
@@ -104,4 +106,13 @@ interface ApiService {
         @Path("classroomId") classroomId: Int,
         @Path("materialId") materialId: Int
     ): Response<Unit>
+
+    @Streaming
+    @GET("api/classrooms/{classroomId}/materials/{materialId}/download")
+    suspend fun downloadMaterial(
+        @Header("Authorization") token: String,
+        @Path("classroomId") classroomId: Int,
+        @Path("materialId") materialId: Int
+    ): Response<ResponseBody>
+
 }

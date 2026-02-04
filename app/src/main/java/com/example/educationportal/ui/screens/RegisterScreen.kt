@@ -1,11 +1,9 @@
 package com.example.educationportal.ui.screens
 
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,25 +50,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.educationportal.data.model.UserRole
 import com.example.educationportal.ui.theme.GradientEnd
 import com.example.educationportal.ui.theme.GradientMiddle
 import com.example.educationportal.ui.theme.GradientStart
-import com.example.educationportal.ui.theme.Primary
-import com.example.educationportal.ui.theme.Secondary
 import com.example.educationportal.ui.viewmodel.RegisterEvent
 import com.example.educationportal.ui.viewmodel.RegisterViewModel
 
@@ -83,18 +75,10 @@ fun RegisterScreen(
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
 
-    // Navigate to login after successful registration - use Toast instead of Snackbar
-    LaunchedEffect(uiState.isSuccess, uiState.isNavigated) {
-        if (uiState.isSuccess && !uiState.isNavigated) {
-            viewModel.onEvent(RegisterEvent.NavigationHandled)
-            Toast.makeText(
-                context,
-                uiState.successMessage ?: "Registration successful! Please login.",
-                Toast.LENGTH_LONG
-            ).show()
-            onNavigateToLogin()
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onNavigateToHome()
         }
     }
 
@@ -131,10 +115,7 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Start
             ) {
-                IconButton(
-                    onClick = onNavigateToLogin,
-                    enabled = !uiState.isLoading
-                ) {
+                IconButton(onClick = onNavigateToLogin) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
@@ -143,17 +124,17 @@ fun RegisterScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Logo and Title
             Icon(
                 imageVector = Icons.Default.School,
                 contentDescription = "Logo",
-                modifier = Modifier.size(56.dp),
+                modifier = Modifier.size(64.dp),
                 tint = Color.White
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = "Create Account",
@@ -163,12 +144,12 @@ fun RegisterScreen(
             )
 
             Text(
-                text = "Join as a Teacher or Student",
+                text = "Start your learning journey",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.8f)
             )
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Register Card
             Card(
@@ -185,42 +166,12 @@ fun RegisterScreen(
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Role Selection
                     Text(
-                        text = "I am a",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium,
+                        text = "Sign Up",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Role Toggle Buttons
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        RoleSelectionButton(
-                            role = UserRole.STUDENT,
-                            isSelected = uiState.selectedRole == UserRole.STUDENT,
-                            onClick = { 
-                                if (!uiState.isLoading) {
-                                    viewModel.onEvent(RegisterEvent.RoleChanged(UserRole.STUDENT))
-                                }
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                        RoleSelectionButton(
-                            role = UserRole.TEACHER,
-                            isSelected = uiState.selectedRole == UserRole.TEACHER,
-                            onClick = { 
-                                if (!uiState.isLoading) {
-                                    viewModel.onEvent(RegisterEvent.RoleChanged(UserRole.TEACHER))
-                                }
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
 
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -239,7 +190,6 @@ fun RegisterScreen(
                         isError = uiState.fullNameError != null,
                         supportingText = uiState.fullNameError?.let { { Text(it) } },
                         singleLine = true,
-                        enabled = !uiState.isLoading,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Text,
                             imeAction = ImeAction.Next
@@ -272,7 +222,6 @@ fun RegisterScreen(
                         isError = uiState.emailError != null,
                         supportingText = uiState.emailError?.let { { Text(it) } },
                         singleLine = true,
-                        enabled = !uiState.isLoading,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
                             imeAction = ImeAction.Next
@@ -295,7 +244,7 @@ fun RegisterScreen(
                         value = uiState.password,
                         onValueChange = { viewModel.onEvent(RegisterEvent.PasswordChanged(it)) },
                         label = { Text("Password") },
-                        placeholder = { Text("Min 8 chars, upper, lower, digit") },
+                        placeholder = { Text("Create a password") },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Lock,
@@ -324,7 +273,6 @@ fun RegisterScreen(
                         isError = uiState.passwordError != null,
                         supportingText = uiState.passwordError?.let { { Text(it) } },
                         singleLine = true,
-                        enabled = !uiState.isLoading,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Next
@@ -376,7 +324,6 @@ fun RegisterScreen(
                         isError = uiState.confirmPasswordError != null,
                         supportingText = uiState.confirmPasswordError?.let { { Text(it) } },
                         singleLine = true,
-                        enabled = !uiState.isLoading,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Done
@@ -384,9 +331,7 @@ fun RegisterScreen(
                         keyboardActions = KeyboardActions(
                             onDone = {
                                 focusManager.clearFocus()
-                                if (!uiState.isLoading && !uiState.isSuccess) {
-                                    viewModel.onEvent(RegisterEvent.Register)
-                                }
+                                viewModel.onEvent(RegisterEvent.Register)
                             }
                         ),
                         modifier = Modifier.fillMaxWidth(),
@@ -401,50 +346,43 @@ fun RegisterScreen(
 
                     // Register Button
                     Button(
-                        onClick = { 
-                            focusManager.clearFocus()
-                            viewModel.onEvent(RegisterEvent.Register) 
-                        },
+                        onClick = { viewModel.onEvent(RegisterEvent.Register) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
                         shape = RoundedCornerShape(12.dp),
-                        enabled = !uiState.isLoading && !uiState.isSuccess,
+                        enabled = !uiState.isLoading,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (uiState.selectedRole == UserRole.TEACHER) {
-                                Secondary
-                            } else {
-                                MaterialTheme.colorScheme.primary
-                            }
+                            containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        if (uiState.isLoading) {
+                        AnimatedVisibility(
+                            visible = uiState.isLoading,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
                                 color = Color.White,
                                 strokeWidth = 2.dp
                             )
-                        } else {
+                        }
+                        AnimatedVisibility(
+                            visible = !uiState.isLoading,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
                             Text(
-                                text = if (uiState.selectedRole == UserRole.TEACHER) {
-                                    "Register as Teacher"
-                                } else {
-                                    "Register as Student"
-                                },
+                                text = "Create Account",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (uiState.selectedRole == UserRole.TEACHER) {
-                                    Color.Black
-                                } else {
-                                    Color.White
-                                }
+                                fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Login Link
             Row(
@@ -461,16 +399,14 @@ fun RegisterScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    modifier = Modifier.clickable(enabled = !uiState.isLoading) { 
-                        onNavigateToLogin() 
-                    }
+                    modifier = Modifier.clickable { onNavigateToLogin() }
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // Snackbar for error messages only
+        // Snackbar for errors
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
@@ -481,67 +417,6 @@ fun RegisterScreen(
                 snackbarData = data,
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 contentColor = MaterialTheme.colorScheme.onErrorContainer
-            )
-        }
-    }
-}
-
-@Composable
-private fun RoleSelectionButton(
-    role: UserRole,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val backgroundColor = if (isSelected) {
-        if (role == UserRole.TEACHER) Secondary else Primary
-    } else {
-        Color.Transparent
-    }
-
-    val borderColor = if (role == UserRole.TEACHER) Secondary else Primary
-
-    val textColor = if (isSelected) {
-        if (role == UserRole.TEACHER) Color.Black else Color.White
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
-
-    Box(
-        modifier = modifier
-            .height(80.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(backgroundColor)
-            .border(
-                width = 2.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(16.dp)
-            )
-            .clickable { onClick() }
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = if (role == UserRole.TEACHER) {
-                    Icons.Default.School
-                } else {
-                    Icons.Default.Person
-                },
-                contentDescription = role.value,
-                tint = textColor,
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = if (role == UserRole.TEACHER) "Teacher" else "Student",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = textColor,
-                textAlign = TextAlign.Center
             )
         }
     }

@@ -30,7 +30,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.educationportal.data.model.UserRole
 import com.example.educationportal.ui.theme.GradientEnd
 import com.example.educationportal.ui.theme.GradientMiddle
 import com.example.educationportal.ui.theme.GradientStart
@@ -40,7 +39,7 @@ import com.example.educationportal.ui.viewmodel.SplashViewModel
 fun SplashScreen(
     viewModel: SplashViewModel,
     onNavigateToLogin: () -> Unit,
-    onNavigateToHome: (UserRole) -> Unit
+    onNavigateToHome: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -61,14 +60,11 @@ fun SplashScreen(
         )
     }
 
-    LaunchedEffect(uiState.isLoggedIn, uiState.userRole) {
-        when {
-            uiState.isLoggedIn == true && uiState.userRole != null -> {
-                onNavigateToHome(uiState.userRole!!)
-            }
-            uiState.isLoggedIn == false -> {
-                onNavigateToLogin()
-            }
+    LaunchedEffect(uiState.isLoggedIn) {
+        when (uiState.isLoggedIn) {
+            true -> onNavigateToHome()
+            false -> onNavigateToLogin()
+            null -> { /* Still loading */ }
         }
     }
 
@@ -103,7 +99,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Classroom Portal",
+                text = "Education Portal",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -112,7 +108,7 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Learn. Teach. Succeed.",
+                text = "Learn. Grow. Succeed.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color.White.copy(alpha = 0.8f)
             )

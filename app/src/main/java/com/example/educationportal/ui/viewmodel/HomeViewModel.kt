@@ -2,7 +2,6 @@ package com.example.educationportal.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.educationportal.data.model.UserRole
 import com.example.educationportal.data.repository.AuthRepository
 import com.example.educationportal.util.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +13,6 @@ import kotlinx.coroutines.launch
 data class HomeUiState(
     val userName: String = "",
     val userEmail: String = "",
-    val userRole: UserRole = UserRole.STUDENT,
     val isLoading: Boolean = false,
     val isLoggedOut: Boolean = false,
     val errorMessage: String? = null
@@ -49,12 +47,7 @@ class HomeViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            // Get role from local storage
-            val role = authRepository.getUserRole()
-            _uiState.update { it.copy(userRole = role) }
-        }
-
-        viewModelScope.launch {
+            // First try to get from local storage
             authRepository.userName.collect { name ->
                 if (name != null) {
                     _uiState.update { it.copy(userName = name, isLoading = false) }
@@ -70,14 +63,6 @@ class HomeViewModel(
             }
         }
 
-        viewModelScope.launch {
-            authRepository.userRole.collect { role ->
-                if (role != null) {
-                    _uiState.update { it.copy(userRole = UserRole.fromString(role)) }
-                }
-            }
-        }
-
         // Also try to refresh from API
         viewModelScope.launch {
             when (val result = authRepository.getCurrentUser()) {
@@ -87,7 +72,6 @@ class HomeViewModel(
                             it.copy(
                                 userName = user.fullName,
                                 userEmail = user.email,
-                                userRole = user.getUserRole(),
                                 isLoading = false
                             )
                         }

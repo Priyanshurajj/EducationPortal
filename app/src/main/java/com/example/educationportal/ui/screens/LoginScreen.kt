@@ -57,8 +57,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.example.educationportal.data.model.UserRole
 import com.example.educationportal.ui.theme.GradientEnd
 import com.example.educationportal.ui.theme.GradientMiddle
 import com.example.educationportal.ui.theme.GradientStart
@@ -69,17 +69,15 @@ import com.example.educationportal.ui.viewmodel.LoginViewModel
 fun LoginScreen(
     viewModel: LoginViewModel,
     onNavigateToRegister: () -> Unit,
-    onNavigateToHome: (UserRole) -> Unit
+    onNavigateToHome: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Handle navigation only once
-    LaunchedEffect(uiState.isSuccess, uiState.userRole, uiState.isNavigated) {
-        if (uiState.isSuccess && uiState.userRole != null && !uiState.isNavigated) {
-            viewModel.onEvent(LoginEvent.NavigationHandled)
-            onNavigateToHome(uiState.userRole!!)
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onNavigateToHome()
         }
     }
 
@@ -131,7 +129,7 @@ fun LoginScreen(
             )
 
             Text(
-                text = "Sign in to continue",
+                text = "Sign in to continue learning",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.8f)
             )
@@ -177,7 +175,6 @@ fun LoginScreen(
                         isError = uiState.emailError != null,
                         supportingText = uiState.emailError?.let { { Text(it) } },
                         singleLine = true,
-                        enabled = !uiState.isLoading,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Email,
                             imeAction = ImeAction.Next
@@ -229,7 +226,6 @@ fun LoginScreen(
                         isError = uiState.passwordError != null,
                         supportingText = uiState.passwordError?.let { { Text(it) } },
                         singleLine = true,
-                        enabled = !uiState.isLoading,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Password,
                             imeAction = ImeAction.Done
@@ -237,9 +233,7 @@ fun LoginScreen(
                         keyboardActions = KeyboardActions(
                             onDone = {
                                 focusManager.clearFocus()
-                                if (!uiState.isLoading && !uiState.isSuccess) {
-                                    viewModel.onEvent(LoginEvent.Login)
-                                }
+                                viewModel.onEvent(LoginEvent.Login)
                             }
                         ),
                         modifier = Modifier.fillMaxWidth(),
@@ -254,26 +248,32 @@ fun LoginScreen(
 
                     // Login Button
                     Button(
-                        onClick = { 
-                            focusManager.clearFocus()
-                            viewModel.onEvent(LoginEvent.Login) 
-                        },
+                        onClick = { viewModel.onEvent(LoginEvent.Login) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
                         shape = RoundedCornerShape(12.dp),
-                        enabled = !uiState.isLoading && !uiState.isSuccess,
+                        enabled = !uiState.isLoading,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        if (uiState.isLoading) {
+                        AnimatedVisibility(
+                            visible = uiState.isLoading,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp),
                                 color = Color.White,
                                 strokeWidth = 2.dp
                             )
-                        } else {
+                        }
+                        AnimatedVisibility(
+                            visible = !uiState.isLoading,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
                             Text(
                                 text = "Sign In",
                                 style = MaterialTheme.typography.titleMedium,
@@ -289,9 +289,7 @@ fun LoginScreen(
                         text = "Forgot Password?",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable(enabled = !uiState.isLoading) { 
-                            /* TODO: Implement forgot password */ 
-                        }
+                        modifier = Modifier.clickable { /* TODO: Implement forgot password */ }
                     )
                 }
             }
@@ -313,9 +311,7 @@ fun LoginScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    modifier = Modifier.clickable(enabled = !uiState.isLoading) { 
-                        onNavigateToRegister() 
-                    }
+                    modifier = Modifier.clickable { onNavigateToRegister() }
                 )
             }
 

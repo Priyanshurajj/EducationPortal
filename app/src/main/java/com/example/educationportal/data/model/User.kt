@@ -12,15 +12,9 @@ data class User(
     @SerializedName("full_name")
     val fullName: String,
 
-    @SerializedName("role")
-    val role: String, // "teacher" or "student"
+    @SerializedName("is_active")
+    val isActive: Boolean = true,
 
     @SerializedName("created_at")
     val createdAt: String? = null
-) {
-    fun getUserRole(): UserRole = UserRole.fromString(role)
-    
-    fun isTeacher(): Boolean = role.lowercase() == "teacher"
-    
-    fun isStudent(): Boolean = role.lowercase() == "student"
-}
+)

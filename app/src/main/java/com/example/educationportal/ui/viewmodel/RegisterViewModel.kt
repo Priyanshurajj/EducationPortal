@@ -2,7 +2,6 @@ package com.example.educationportal.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.educationportal.data.model.UserRole
 import com.example.educationportal.data.repository.AuthRepository
 import com.example.educationportal.util.Resource
 import com.example.educationportal.util.ValidationUtils
@@ -17,15 +16,12 @@ data class RegisterUiState(
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
-    val selectedRole: UserRole = UserRole.STUDENT,
     val fullNameError: String? = null,
     val emailError: String? = null,
     val passwordError: String? = null,
     val confirmPasswordError: String? = null,
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
-    val isNavigated: Boolean = false,
-    val successMessage: String? = null,
     val errorMessage: String? = null,
     val isPasswordVisible: Boolean = false,
     val isConfirmPasswordVisible: Boolean = false
@@ -36,13 +32,10 @@ sealed class RegisterEvent {
     data class EmailChanged(val email: String) : RegisterEvent()
     data class PasswordChanged(val password: String) : RegisterEvent()
     data class ConfirmPasswordChanged(val confirmPassword: String) : RegisterEvent()
-    data class RoleChanged(val role: UserRole) : RegisterEvent()
     data object TogglePasswordVisibility : RegisterEvent()
     data object ToggleConfirmPasswordVisibility : RegisterEvent()
     data object Register : RegisterEvent()
     data object ClearError : RegisterEvent()
-    data object ClearSuccess : RegisterEvent()
-    data object NavigationHandled : RegisterEvent()
 }
 
 class RegisterViewModel(
@@ -66,9 +59,6 @@ class RegisterViewModel(
             is RegisterEvent.ConfirmPasswordChanged -> {
                 _uiState.update { it.copy(confirmPassword = event.confirmPassword, confirmPasswordError = null) }
             }
-            is RegisterEvent.RoleChanged -> {
-                _uiState.update { it.copy(selectedRole = event.role) }
-            }
             is RegisterEvent.TogglePasswordVisibility -> {
                 _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
             }
@@ -81,22 +71,11 @@ class RegisterViewModel(
             is RegisterEvent.ClearError -> {
                 _uiState.update { it.copy(errorMessage = null) }
             }
-            is RegisterEvent.ClearSuccess -> {
-                _uiState.update { it.copy(successMessage = null) }
-            }
-            is RegisterEvent.NavigationHandled -> {
-                _uiState.update { it.copy(isNavigated = true) }
-            }
         }
     }
 
     private fun register() {
         val currentState = _uiState.value
-
-        // Prevent multiple submissions
-        if (currentState.isLoading || currentState.isSuccess) {
-            return
-        }
 
         // Validate full name
         val fullNameValidation = ValidationUtils.validateFullName(currentState.fullName)
@@ -133,20 +112,12 @@ class RegisterViewModel(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             when (val result = authRepository.register(
-                email = currentState.email,
-                password = currentState.password,
-                fullName = currentState.fullName,
-                role = currentState.selectedRole
+                currentState.email,
+                currentState.password,
+                currentState.fullName
             )) {
                 is Resource.Success -> {
-                    val roleText = if (currentState.selectedRole == UserRole.TEACHER) "Teacher" else "Student"
-                    _uiState.update { 
-                        it.copy(
-                            isLoading = false, 
-                            isSuccess = true,
-                            successMessage = "Registration successful as $roleText! Please login."
-                        ) 
-                    }
+                    _uiState.update { it.copy(isLoading = false, isSuccess = true) }
                 }
                 is Resource.Error -> {
                     _uiState.update {
