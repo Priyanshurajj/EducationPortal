@@ -57,8 +57,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.educationportal.data.model.UserRole
 import com.example.educationportal.ui.theme.GradientEnd
 import com.example.educationportal.ui.theme.GradientMiddle
 import com.example.educationportal.ui.theme.GradientStart
@@ -69,15 +69,15 @@ import com.example.educationportal.ui.viewmodel.LoginViewModel
 fun LoginScreen(
     viewModel: LoginViewModel,
     onNavigateToRegister: () -> Unit,
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: (UserRole) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
-            onNavigateToHome()
+    LaunchedEffect(uiState.isSuccess, uiState.userRole) {
+        if (uiState.isSuccess && uiState.userRole != null) {
+            onNavigateToHome(uiState.userRole!!)
         }
     }
 

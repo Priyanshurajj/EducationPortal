@@ -1,10 +1,13 @@
 package com.example.educationportal.data.repository
 
 import com.example.educationportal.data.local.TokenManager
+import com.example.educationportal.data.model.ApiError
 import com.example.educationportal.data.model.AuthResponse
 import com.example.educationportal.data.model.LoginRequest
 import com.example.educationportal.data.model.RegisterRequest
 import com.example.educationportal.data.model.User
+import com.example.educationportal.data.model.UserRole
+import com.example.educationportal.data.model.ValidationError
 import com.example.educationportal.data.remote.ApiService
 import com.example.educationportal.util.Resource
 import com.google.gson.Gson
@@ -19,24 +22,27 @@ class AuthRepository(
     val userEmail: Flow<String?> = tokenManager.userEmail
     val userName: Flow<String?> = tokenManager.userName
 
-    suspend fun login(email: String, password: String): Resource<AuthResponse> {
+    suspend fun login(email: String, password: String): Resource<UserRole> {
         return try {
             val response = apiService.login(LoginRequest(email, password))
             if (response.isSuccessful) {
                 response.body()?.let { authResponse ->
+                    // Save the token first
                     tokenManager.saveToken(authResponse.accessToken)
-                    authResponse.user?.let { user ->
-                        tokenManager.saveUserInfo(user.email, user.fullName)
+                    
+                    // Fetch user details to get role
+                    val userResponse = apiService.getCurrentUser("Bearer ${authResponse.accessToken}")
+                    if (userResponse.isSuccessful) {
+                        userResponse.body()?.let { user ->
+                            tokenManager.saveUserInfo(user.email, user.fullName, user.role.name.lowercase())
+                            Resource.Success(user.role)
+                        } ?: Resource.Error("Failed to get user details")
+                    } else {
+                        Resource.Error("Failed to get user details: ${userResponse.code()}")
                     }
-                    Resource.Success(authResponse)
                 } ?: Resource.Error("Empty response body")
             } else {
-                val errorBody = response.errorBody()?.string()
-                val errorMessage = try {
-                    Gson().fromJson(errorBody, com.example.educationportal.data.model.ApiError::class.java).detail
-                } catch (e: Exception) {
-                    "Login failed: ${response.code()}"
-                }
+                val errorMessage = parseErrorMessage(response.errorBody()?.string())
                 Resource.Error(errorMessage)
             }
         } catch (e: Exception) {
@@ -44,24 +50,15 @@ class AuthRepository(
         }
     }
 
-    suspend fun register(email: String, password: String, fullName: String): Resource<AuthResponse> {
+    suspend fun register(email: String, password: String, fullName: String, role: String): Resource<User> {
         return try {
-            val response = apiService.register(RegisterRequest(email, password, fullName))
+            val response = apiService.register(RegisterRequest(email, password, fullName, role))
             if (response.isSuccessful) {
-                response.body()?.let { authResponse ->
-                    tokenManager.saveToken(authResponse.accessToken)
-                    authResponse.user?.let { user ->
-                        tokenManager.saveUserInfo(user.email, user.fullName)
-                    } ?: tokenManager.saveUserInfo(email, fullName)
-                    Resource.Success(authResponse)
+                response.body()?.let { user ->
+                    Resource.Success(user)
                 } ?: Resource.Error("Empty response body")
             } else {
-                val errorBody = response.errorBody()?.string()
-                val errorMessage = try {
-                    Gson().fromJson(errorBody, com.example.educationportal.data.model.ApiError::class.java).detail
-                } catch (e: Exception) {
-                    "Registration failed: ${response.code()}"
-                }
+                val errorMessage = parseErrorMessage(response.errorBody()?.string())
                 Resource.Error(errorMessage)
             }
         } catch (e: Exception) {
@@ -75,7 +72,7 @@ class AuthRepository(
             val response = apiService.getCurrentUser("Bearer $token")
             if (response.isSuccessful) {
                 response.body()?.let { user ->
-                    tokenManager.saveUserInfo(user.email, user.fullName)
+                    tokenManager.saveUserInfo(user.email, user.fullName, user.role.name.lowercase())
                     Resource.Success(user)
                 } ?: Resource.Error("Empty response body")
             } else {
@@ -86,12 +83,18 @@ class AuthRepository(
         }
     }
 
+    suspend fun getUserRole(): UserRole? {
+        return tokenManager.getUserRole()?.let { roleStr ->
+            try {
+                UserRole.valueOf(roleStr.uppercase())
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
     suspend fun logout(): Resource<Unit> {
         return try {
-            val token = tokenManager.getToken()
-            if (token != null) {
-                apiService.logout("Bearer $token")
-            }
             tokenManager.clearAll()
             Resource.Success(Unit)
         } catch (e: Exception) {
@@ -106,5 +109,21 @@ class AuthRepository(
 
     suspend fun getToken(): String? {
         return tokenManager.getToken()
+    }
+
+    private fun parseErrorMessage(errorBody: String?): String {
+        if (errorBody == null) return "Unknown error occurred"
+
+        return try {
+            val simpleError = Gson().fromJson(errorBody, ApiError::class.java)
+            simpleError.detail
+        } catch (e: Exception) {
+            try {
+                val validationError = Gson().fromJson(errorBody, ValidationError::class.java)
+                validationError.detail?.firstOrNull()?.msg ?: "Validation error"
+            } catch (e: Exception) {
+                "Request failed"
+            }
+        }
     }
 }

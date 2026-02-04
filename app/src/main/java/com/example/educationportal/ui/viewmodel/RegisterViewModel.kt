@@ -16,6 +16,7 @@ data class RegisterUiState(
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",
+    val role: String = "student",
     val fullNameError: String? = null,
     val emailError: String? = null,
     val passwordError: String? = null,
@@ -32,6 +33,7 @@ sealed class RegisterEvent {
     data class EmailChanged(val email: String) : RegisterEvent()
     data class PasswordChanged(val password: String) : RegisterEvent()
     data class ConfirmPasswordChanged(val confirmPassword: String) : RegisterEvent()
+    data class RoleChanged(val role: String) : RegisterEvent()
     data object TogglePasswordVisibility : RegisterEvent()
     data object ToggleConfirmPasswordVisibility : RegisterEvent()
     data object Register : RegisterEvent()
@@ -58,6 +60,9 @@ class RegisterViewModel(
             }
             is RegisterEvent.ConfirmPasswordChanged -> {
                 _uiState.update { it.copy(confirmPassword = event.confirmPassword, confirmPasswordError = null) }
+            }
+            is RegisterEvent.RoleChanged -> {
+                _uiState.update { it.copy(role = event.role) }
             }
             is RegisterEvent.TogglePasswordVisibility -> {
                 _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
@@ -114,7 +119,8 @@ class RegisterViewModel(
             when (val result = authRepository.register(
                 currentState.email,
                 currentState.password,
-                currentState.fullName
+                currentState.fullName,
+                currentState.role
             )) {
                 is Resource.Success -> {
                     _uiState.update { it.copy(isLoading = false, isSuccess = true) }

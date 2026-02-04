@@ -18,7 +18,10 @@ data class RegisterRequest(
     val password: String,
 
     @SerializedName("full_name")
-    val fullName: String
+    val fullName: String,
+
+    @SerializedName("role")
+    val role: String = "student"
 )
 
 data class AuthResponse(
@@ -26,13 +29,26 @@ data class AuthResponse(
     val accessToken: String,
 
     @SerializedName("token_type")
-    val tokenType: String = "bearer",
-
-    @SerializedName("user")
-    val user: User? = null
+    val tokenType: String = "bearer"
 )
 
 data class ApiError(
     @SerializedName("detail")
     val detail: String
+)
+
+data class ValidationError(
+    @SerializedName("detail")
+    val detail: List<ValidationErrorDetail>?
+)
+
+data class ValidationErrorDetail(
+    @SerializedName("loc")
+    val loc: List<String>?,
+
+    @SerializedName("msg")
+    val msg: String?,
+
+    @SerializedName("type")
+    val type: String?
 )

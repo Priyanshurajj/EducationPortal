@@ -18,6 +18,7 @@ class TokenManager(private val context: Context) {
         private val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
         private val USER_EMAIL_KEY = stringPreferencesKey("user_email")
         private val USER_NAME_KEY = stringPreferencesKey("user_name")
+        private val USER_ROLE_KEY = stringPreferencesKey("user_role")
     }
 
     val accessToken: Flow<String?> = context.dataStore.data.map { preferences ->
@@ -32,21 +33,30 @@ class TokenManager(private val context: Context) {
         preferences[USER_NAME_KEY]
     }
 
+    val userRole: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[USER_ROLE_KEY]
+    }
+
     suspend fun saveToken(token: String) {
         context.dataStore.edit { preferences ->
             preferences[ACCESS_TOKEN_KEY] = token
         }
     }
 
-    suspend fun saveUserInfo(email: String, name: String) {
+    suspend fun saveUserInfo(email: String, name: String, role: String) {
         context.dataStore.edit { preferences ->
             preferences[USER_EMAIL_KEY] = email
             preferences[USER_NAME_KEY] = name
+            preferences[USER_ROLE_KEY] = role
         }
     }
 
     suspend fun getToken(): String? {
         return context.dataStore.data.first()[ACCESS_TOKEN_KEY]
+    }
+
+    suspend fun getUserRole(): String? {
+        return context.dataStore.data.first()[USER_ROLE_KEY]
     }
 
     suspend fun clearAll() {

@@ -2,6 +2,7 @@ package com.example.educationportal.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.educationportal.data.model.UserRole
 import com.example.educationportal.data.repository.AuthRepository
 import com.example.educationportal.util.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.launch
 data class HomeUiState(
     val userName: String = "",
     val userEmail: String = "",
+    val userRole: UserRole? = null,
     val isLoading: Boolean = false,
     val isLoggedOut: Boolean = false,
     val errorMessage: String? = null
@@ -63,6 +65,12 @@ class HomeViewModel(
             }
         }
 
+        // Get user role from local storage
+        viewModelScope.launch {
+            val role = authRepository.getUserRole()
+            _uiState.update { it.copy(userRole = role) }
+        }
+
         // Also try to refresh from API
         viewModelScope.launch {
             when (val result = authRepository.getCurrentUser()) {
@@ -72,6 +80,7 @@ class HomeViewModel(
                             it.copy(
                                 userName = user.fullName,
                                 userEmail = user.email,
+                                userRole = user.role,
                                 isLoading = false
                             )
                         }
@@ -87,7 +96,7 @@ class HomeViewModel(
         }
     }
 
-    private fun logout() {
+    fun logout() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 

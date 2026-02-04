@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -37,6 +38,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Snackbar
@@ -76,9 +78,11 @@ fun RegisterScreen(
     val focusManager = LocalFocusManager.current
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // After successful registration, navigate to login
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            onNavigateToHome()
+            snackbarHostState.showSnackbar("Registration successful! Please login.")
+            onNavigateToLogin()
         }
     }
 
@@ -174,6 +178,67 @@ fun RegisterScreen(
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
+
+                    // Role Selection
+                    Text(
+                        text = "I am a:",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Student Button
+                        if (uiState.role == "student") {
+                            Button(
+                                onClick = { viewModel.onEvent(RegisterEvent.RoleChanged("student")) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Text("Student")
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { viewModel.onEvent(RegisterEvent.RoleChanged("student")) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Student")
+                            }
+                        }
+
+                        // Teacher Button
+                        if (uiState.role == "teacher") {
+                            Button(
+                                onClick = { viewModel.onEvent(RegisterEvent.RoleChanged("teacher")) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Text("Teacher")
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { viewModel.onEvent(RegisterEvent.RoleChanged("teacher")) },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Teacher")
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Full Name Field
                     OutlinedTextField(

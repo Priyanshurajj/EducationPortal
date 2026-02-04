@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.educationportal.data.model.UserRole
 import com.example.educationportal.ui.theme.GradientEnd
 import com.example.educationportal.ui.theme.GradientMiddle
 import com.example.educationportal.ui.theme.GradientStart
@@ -39,7 +40,7 @@ import com.example.educationportal.ui.viewmodel.SplashViewModel
 fun SplashScreen(
     viewModel: SplashViewModel,
     onNavigateToLogin: () -> Unit,
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: (UserRole) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -60,9 +61,12 @@ fun SplashScreen(
         )
     }
 
-    LaunchedEffect(uiState.isLoggedIn) {
+    LaunchedEffect(uiState.isLoggedIn, uiState.userRole) {
         when (uiState.isLoggedIn) {
-            true -> onNavigateToHome()
+            true -> {
+                val role = uiState.userRole ?: UserRole.STUDENT
+                onNavigateToHome(role)
+            }
             false -> onNavigateToLogin()
             null -> { /* Still loading */ }
         }

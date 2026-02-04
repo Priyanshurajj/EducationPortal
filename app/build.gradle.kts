@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.educationportal"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.educationportal"
@@ -19,7 +19,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Base URL for API - change this to your FastAPI backend URL
-        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000/\"")
+        buildConfigField("String", "BASE_URL", "\"http://192.168.1.9:8000/\"")
     }
 
     buildTypes {

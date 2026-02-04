@@ -2,6 +2,7 @@ package com.example.educationportal.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.educationportal.data.model.UserRole
 import com.example.educationportal.data.repository.AuthRepository
 import com.example.educationportal.util.Resource
 import com.example.educationportal.util.ValidationUtils
@@ -18,6 +19,7 @@ data class LoginUiState(
     val passwordError: String? = null,
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
+    val userRole: UserRole? = null,
     val errorMessage: String? = null,
     val isPasswordVisible: Boolean = false
 )
@@ -67,10 +69,9 @@ class LoginViewModel(
             return
         }
 
-        // Validate password
-        val passwordValidation = ValidationUtils.validatePassword(currentState.password)
-        if (!passwordValidation.isValid) {
-            _uiState.update { it.copy(passwordError = passwordValidation.errorMessage) }
+        // Validate password (basic check for login, not full validation)
+        if (currentState.password.isBlank()) {
+            _uiState.update { it.copy(passwordError = "Password is required") }
             return
         }
 
@@ -79,7 +80,13 @@ class LoginViewModel(
 
             when (val result = authRepository.login(currentState.email, currentState.password)) {
                 is Resource.Success -> {
-                    _uiState.update { it.copy(isLoading = false, isSuccess = true) }
+                    _uiState.update { 
+                        it.copy(
+                            isLoading = false, 
+                            isSuccess = true,
+                            userRole = result.data
+                        ) 
+                    }
                 }
                 is Resource.Error -> {
                     _uiState.update {
