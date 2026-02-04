@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import com.example.educationportal.data.model.Material
 import com.example.educationportal.data.model.UserRole
@@ -38,11 +39,12 @@ import com.example.educationportal.ui.viewmodel.HomeViewModel
 import java.io.File
 import java.io.FileOutputStream
 
-// Theme colors (matching teacher/student themes)
-private val PrimaryColor = Color(0xFF6366F1) // Indigo
-private val BackgroundDark = Color(0xFF0F172A)
-private val SurfaceDark = Color(0xFF1E293B)
-private val CardBg = Color(0xFF334155)
+// Theme colors - Purple/Indigo with Black gradient
+private val PrimaryColor = Color(0xFF7C4DFF) // Purple accent
+private val SecondaryColor = Color(0xFF536DFE)
+private val BackgroundDark = Color(0xFF000000)
+private val SurfaceDark = Color(0xFF0D1117)
+private val CardBg = Color(0xFF1C1C2E)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +75,6 @@ fun ClassDetailScreen(
             try {
                 val inputStream = context.contentResolver.openInputStream(uri)
 
-                // Get filename from ContentResolver (works for content URIs)
                 var fileName = "file"
                 context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                     val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -82,10 +83,8 @@ fun ClassDetailScreen(
                     }
                 }
 
-                // Fallback: try to extract from URI path if ContentResolver didn't work
                 if (fileName == "file" || fileName.isEmpty()) {
                     fileName = uri.lastPathSegment?.substringAfterLast('/') ?: "file"
-                    // If still no valid filename, generate one with extension from MIME type
                     if (fileName == "file" || !fileName.contains('.')) {
                         val mimeType = context.contentResolver.getType(uri)
                         val extension = when {
@@ -116,7 +115,6 @@ fun ClassDetailScreen(
         }
     }
 
-    // Helper function to open file
     fun openFile(file: File) {
         try {
             val uri = FileProvider.getUriForFile(
@@ -148,12 +146,10 @@ fun ClassDetailScreen(
         }
     }
 
-    // Load classroom detail on launch
     LaunchedEffect(classroomId) {
         classroomViewModel.onEvent(ClassroomEvent.LoadClassroomDetail(classroomId))
     }
 
-    // Handle upload success
     LaunchedEffect(detailState.uploadSuccess) {
         if (detailState.uploadSuccess) {
             showUploadDialog = false
@@ -166,7 +162,6 @@ fun ClassDetailScreen(
         }
     }
 
-    // Handle downloaded file
     LaunchedEffect(detailState.downloadedFile) {
         detailState.downloadedFile?.let { file ->
             openFile(file)
@@ -179,9 +174,14 @@ fun ClassDetailScreen(
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(BackgroundDark, SurfaceDark)
+                    colors = listOf(
+                        BackgroundDark,
+                        Color(0xFF0A0A1A),
+                        SurfaceDark
+                    )
                 )
             )
+            .systemBarsPadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Top Bar
@@ -191,7 +191,8 @@ fun ClassDetailScreen(
                         text = detailState.classroom?.name ?: "Class Details",
                         color = Color.White,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        fontSize = 18.sp
                     )
                 },
                 navigationIcon = {
@@ -218,9 +219,8 @@ fun ClassDetailScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = if (isTeacher) 100.dp else 20.dp)
+                    contentPadding = PaddingValues(bottom = if (isTeacher) 88.dp else 16.dp)
                 ) {
-                    // Class Info Card
                     item {
                         ClassInfoCard(
                             classroom = detailState.classroom,
@@ -228,24 +228,23 @@ fun ClassDetailScreen(
                         )
                     }
 
-                    // Materials Section
                     item {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 20.dp, vertical = 16.dp),
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = "Materials (${detailState.materials.size})",
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                             if (detailState.isMaterialsLoading) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(20.dp),
+                                    modifier = Modifier.size(18.dp),
                                     color = PrimaryColor,
                                     strokeWidth = 2.dp
                                 )
@@ -267,7 +266,6 @@ fun ClassDetailScreen(
                                     classroomViewModel.onEvent(ClassroomEvent.DeleteMaterial(classroomId, material.id))
                                 },
                                 onClick = {
-                                    // Download and open the material
                                     classroomViewModel.onEvent(
                                         ClassroomEvent.DownloadMaterial(
                                             classroomId = classroomId,
@@ -284,13 +282,12 @@ fun ClassDetailScreen(
             }
         }
 
-        // FAB for upload (Teacher only)
         if (isTeacher && !detailState.isLoading) {
             FloatingActionButton(
                 onClick = { showUploadDialog = true },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(24.dp),
+                    .padding(16.dp),
                 containerColor = PrimaryColor,
                 contentColor = Color.White
             ) {
@@ -298,7 +295,6 @@ fun ClassDetailScreen(
             }
         }
 
-        // Error Snackbar
         detailState.errorMessage?.let { error ->
             Snackbar(
                 modifier = Modifier
@@ -315,7 +311,6 @@ fun ClassDetailScreen(
         }
     }
 
-    // Upload Dialog
     if (showUploadDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -329,14 +324,14 @@ fun ClassDetailScreen(
             },
             containerColor = SurfaceDark,
             title = {
-                Text("Upload Material", color = Color.White)
+                Text("Upload Material", color = Color.White, fontSize = 18.sp)
             },
             text = {
                 Column {
                     OutlinedTextField(
                         value = uploadTitle,
                         onValueChange = { uploadTitle = it },
-                        label = { Text("Title") },
+                        label = { Text("Title", fontSize = 14.sp) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -347,11 +342,11 @@ fun ClassDetailScreen(
                             focusedTextColor = Color.White
                         )
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     OutlinedTextField(
                         value = uploadDescription,
                         onValueChange = { uploadDescription = it },
-                        label = { Text("Description (Optional)") },
+                        label = { Text("Description (Optional)", fontSize = 14.sp) },
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 2,
                         maxLines = 3,
@@ -363,39 +358,38 @@ fun ClassDetailScreen(
                             focusedTextColor = Color.White
                         )
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    // File selection
                     OutlinedButton(
                         onClick = { filePickerLauncher.launch("*/*") },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = PrimaryColor
-                        )
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryColor),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Icon(Icons.Default.AttachFile, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(Icons.Default.AttachFile, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = if (selectedFileName.isNotEmpty()) selectedFileName else "Select File",
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            fontSize = 14.sp
                         )
                     }
 
                     if (selectedFileName.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = "Selected: $selectedFileName",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.labelSmall,
                             color = Color.White.copy(alpha = 0.7f)
                         )
                     }
 
                     Text(
                         text = "Supported: PDF, TXT, DOC, DOCX, PPT, PPTX, XLS, XLSX",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.labelSmall,
                         color = Color.White.copy(alpha = 0.5f),
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(top = 6.dp)
                     )
                 }
             },
@@ -418,7 +412,7 @@ fun ClassDetailScreen(
                 ) {
                     if (detailState.isUploading) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(18.dp),
                             color = Color.White,
                             strokeWidth = 2.dp
                         )
@@ -453,20 +447,20 @@ private fun ClassInfoCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(20.dp),
+            .padding(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardBg),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(60.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .size(50.dp)
+                        .clip(RoundedCornerShape(10.dp))
                         .background(PrimaryColor.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
@@ -474,19 +468,18 @@ private fun ClassInfoCard(
                         Icons.Default.Class,
                         contentDescription = null,
                         tint = PrimaryColor,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = classroom?.name ?: "",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     if (isTeacher) {
-                        // Show class code for teachers
                         Surface(
                             color = PrimaryColor.copy(alpha = 0.2f),
                             shape = RoundedCornerShape(4.dp),
@@ -494,9 +487,9 @@ private fun ClassInfoCard(
                         ) {
                             Text(
                                 text = "Code: ${classroom?.classCode ?: ""}",
-                                style = MaterialTheme.typography.labelMedium,
+                                style = MaterialTheme.typography.labelSmall,
                                 color = PrimaryColor,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
                     }
@@ -505,18 +498,18 @@ private fun ClassInfoCard(
 
             classroom?.description?.let { desc ->
                 if (desc.isNotBlank()) {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = desc,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.7f)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -526,17 +519,18 @@ private fun ClassInfoCard(
                     Icon(
                         Icons.Default.People,
                         contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.5f)
+                        tint = Color.White.copy(alpha = 0.5f),
+                        modifier = Modifier.size(20.dp)
                     )
                     Text(
                         text = "${classroom?.studentCount ?: 0}",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Text(
                         text = "Students",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.labelSmall,
                         color = Color.White.copy(alpha = 0.5f)
                     )
                 }
@@ -546,11 +540,12 @@ private fun ClassInfoCard(
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
-                            tint = Color.White.copy(alpha = 0.5f)
+                            tint = Color.White.copy(alpha = 0.5f),
+                            modifier = Modifier.size(20.dp)
                         )
                         Text(
                             text = classroom?.teacher?.fullName ?: "Unknown",
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
                             maxLines = 1,
@@ -558,7 +553,7 @@ private fun ClassInfoCard(
                         )
                         Text(
                             text = "Teacher",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.labelSmall,
                             color = Color.White.copy(alpha = 0.5f)
                         )
                     }
@@ -579,36 +574,36 @@ private fun MaterialCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp)
             .clickable(enabled = !isDownloading) { onClick() },
         colors = CardDefaults.cardColors(containerColor = CardBg),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(10.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
                     .background(PrimaryColor.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = material.getFileIcon(),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleSmall
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = material.title,
-                    style = MaterialTheme.typography.titleSmall,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White,
                     maxLines = 1,
@@ -616,21 +611,14 @@ private fun MaterialCard(
                 )
                 Text(
                     text = "${material.fileType.uppercase()} • ${material.getFormattedFileSize()}",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.labelSmall,
                     color = Color.White.copy(alpha = 0.5f)
                 )
-                material.uploaderName?.let { name ->
-                    Text(
-                        text = "by $name",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.4f)
-                    )
-                }
             }
 
             if (isDownloading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(20.dp),
                     color = PrimaryColor,
                     strokeWidth = 2.dp
                 )
@@ -639,21 +627,21 @@ private fun MaterialCard(
                     Icons.Default.Download,
                     contentDescription = "Download",
                     tint = PrimaryColor,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
             if (isTeacher) {
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 IconButton(
                     onClick = onDelete,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(28.dp)
                 ) {
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "Delete",
                         tint = Color(0xFFEF4444),
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -666,26 +654,26 @@ private fun EmptyMaterialsCard(isTeacher: Boolean) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(20.dp),
+            .padding(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardBg),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(32.dp),
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
                 Icons.Default.Folder,
                 contentDescription = null,
                 tint = PrimaryColor.copy(alpha = 0.5f),
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(40.dp)
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = if (isTeacher) "No materials yet. Upload your first material!" else "No materials available yet.",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = Color.White.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center
             )
