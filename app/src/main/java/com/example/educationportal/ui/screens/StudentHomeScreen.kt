@@ -39,7 +39,8 @@ fun StudentHomeScreen(
     homeViewModel: HomeViewModel,
     classroomViewModel: ClassroomViewModel,
     onNavigateToLogin: () -> Unit,
-    onNavigateToClassDetail: (Int) -> Unit
+    onNavigateToClassDetail: (Int) -> Unit,
+    onNavigateToAiUpload: () -> Unit = {}
 ) {
     val homeState by homeViewModel.uiState.collectAsState()
     val listState by classroomViewModel.listState.collectAsState()
@@ -77,6 +78,14 @@ fun StudentHomeScreen(
                 StudentHeader(
                     userName = homeState.userName,
                     onLogout = { homeViewModel.logout() }
+                )
+            }
+
+            // AI Study Assistant Card
+            item {
+                AiStudyAssistantCard(
+                    onClick = onNavigateToAiUpload,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
 
@@ -404,4 +413,64 @@ private fun EnrollClassDialog(
             }
         }
     )
+}
+
+@Composable
+private fun AiStudyAssistantCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF9C27B0).copy(alpha = 0.2f)),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF9C27B0).copy(alpha = 0.3f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        tint = Color(0xFF9C27B0),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                Column {
+                    Text(
+                        text = "AI Study Assistant",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "Get summaries and ask questions",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.7f)
+                    )
+                }
+            }
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = "Open",
+                tint = Color.White.copy(alpha = 0.5f)
+            )
+        }
+    }
 }

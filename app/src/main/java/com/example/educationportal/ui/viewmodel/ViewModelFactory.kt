@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.educationportal.data.local.TokenManager
 import com.example.educationportal.data.remote.RetrofitClient
+import com.example.educationportal.data.repository.AiRepository
 import com.example.educationportal.data.repository.AuthRepository
 import com.example.educationportal.data.repository.ChatRepository
 import com.example.educationportal.data.repository.ClassroomRepository
@@ -20,6 +21,9 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
     }
     private val chatRepository by lazy {
         ChatRepository(RetrofitClient.apiService, tokenManager)
+    }
+    private val aiRepository by lazy {
+        AiRepository(RetrofitClient.apiService, tokenManager)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -42,6 +46,9 @@ class ViewModelFactory(private val context: Context) : ViewModelProvider.Factory
             }
             modelClass.isAssignableFrom(ChatViewModel::class.java) -> {
                 ChatViewModel(chatRepository) as T
+            }
+            modelClass.isAssignableFrom(AiSummaryViewModel::class.java) -> {
+                AiSummaryViewModel(aiRepository) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }

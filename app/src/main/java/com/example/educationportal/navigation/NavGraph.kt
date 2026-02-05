@@ -10,13 +10,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.educationportal.data.model.UserRole
+import com.example.educationportal.ui.screens.AiSummaryScreen
 import com.example.educationportal.ui.screens.ClassChatScreen
 import com.example.educationportal.ui.screens.ClassDetailScreen
 import com.example.educationportal.ui.screens.LoginScreen
+import com.example.educationportal.ui.screens.MaterialUploadScreen
 import com.example.educationportal.ui.screens.RegisterScreen
 import com.example.educationportal.ui.screens.SplashScreen
 import com.example.educationportal.ui.screens.StudentHomeScreen
 import com.example.educationportal.ui.screens.TeacherHomeScreen
+import com.example.educationportal.ui.viewmodel.AiSummaryViewModel
 import com.example.educationportal.ui.viewmodel.ChatViewModel
 import com.example.educationportal.ui.viewmodel.ClassroomViewModel
 import com.example.educationportal.ui.viewmodel.HomeViewModel
@@ -33,7 +36,7 @@ fun NavGraph(
 ) {
     val context = LocalContext.current
     val viewModelFactory = remember { ViewModelFactory(context) }
-
+    val aiViewModel: AiSummaryViewModel = viewModel(factory = viewModelFactory)
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -127,6 +130,9 @@ fun NavGraph(
                 },
                 onNavigateToClassDetail = { classroomId ->
                     navController.navigate(NavRoutes.ClassDetail.createRoute(classroomId))
+                },
+                onNavigateToAiUpload = {
+                    navController.navigate(NavRoutes.AiUpload.route)
                 }
             )
         }
@@ -173,6 +179,31 @@ fun NavGraph(
                 classroomName = classroomName,
                 currentUserId = homeState.value.currentUserId ?: 0,
                 chatViewModel = chatViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(NavRoutes.AiUpload.route) {
+//            val aiViewModel: AiSummaryViewModel = viewModel(factory = viewModelFactory)
+            MaterialUploadScreen(
+                viewModel = aiViewModel,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToSummary = {
+                    navController.navigate(NavRoutes.AiSummary.route) {
+                        popUpTo(NavRoutes.AiUpload.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(NavRoutes.AiSummary.route) {
+//            val aiViewModel: AiSummaryViewModel = viewModel(factory = viewModelFactory)
+            AiSummaryScreen(
+                viewModel = aiViewModel,
                 onNavigateBack = {
                     navController.popBackStack()
                 }

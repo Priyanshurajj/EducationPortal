@@ -1,5 +1,7 @@
 package com.example.educationportal.data.remote
 
+import com.example.educationportal.data.model.AiChatRequest
+import com.example.educationportal.data.model.AiChatResponse
 import com.example.educationportal.data.model.AuthResponse
 import com.example.educationportal.data.model.ChatHistoryResponse
 import com.example.educationportal.data.model.ChatMessage
@@ -12,6 +14,9 @@ import com.example.educationportal.data.model.LoginRequest
 import com.example.educationportal.data.model.MaterialListResponse
 import com.example.educationportal.data.model.Material
 import com.example.educationportal.data.model.RegisterRequest
+import com.example.educationportal.data.model.SessionDeleteResponse
+import com.example.educationportal.data.model.SessionInfo
+import com.example.educationportal.data.model.SummarizeResponse
 import com.example.educationportal.data.model.User
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -135,5 +140,35 @@ interface ApiService {
         @Query("limit") limit: Int = 20,
         @Query("before_id") beforeId: Int? = null
     ): Response<List<ChatMessage>>
+
+    // ==================== AI Study Assistant Endpoints ====================
+
+    @Multipart
+    @POST("api/ai/summarize")
+    suspend fun summarizeMaterial(
+        @Header("Authorization") token: String,
+        @Part("source_type") sourceType: RequestBody,
+        @Part("content") content: RequestBody?,
+        @Part("title") title: RequestBody?,
+        @Part file: MultipartBody.Part?
+    ): Response<SummarizeResponse>
+
+    @POST("api/ai/chat")
+    suspend fun aiChat(
+        @Header("Authorization") token: String,
+        @Body request: AiChatRequest
+    ): Response<AiChatResponse>
+
+    @GET("api/ai/session/{sessionId}")
+    suspend fun getAiSession(
+        @Header("Authorization") token: String,
+        @Path("sessionId") sessionId: String
+    ): Response<SessionInfo>
+
+    @DELETE("api/ai/session/{sessionId}")
+    suspend fun deleteAiSession(
+        @Header("Authorization") token: String,
+        @Path("sessionId") sessionId: String
+    ): Response<SessionDeleteResponse>
 
 }

@@ -13,4 +13,6 @@ sealed class NavRoutes(val route: String) {
         fun createRoute(classroomId: Int, classroomName: String) = 
             "class_chat/$classroomId/${java.net.URLEncoder.encode(classroomName, "UTF-8")}"
     }
+    data object AiUpload : NavRoutes("ai_upload")
+    data object AiSummary : NavRoutes("ai_summary")
 }
